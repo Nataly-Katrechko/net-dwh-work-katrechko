@@ -1,0 +1,99 @@
+# создание таблиц справочников
+create table dim.dim_passengers(
+passenger_id varchar(20) primary key,
+passenger_name varchar(200),
+contact_data varchar(300)
+);
+
+create table dim.dim_aircrafts(
+aircraft_code varchar(20) primary key,
+model varchar(50),
+range integer
+);
+
+create table dim.dim_airports(
+airport_code varchar(20) primary key,
+airport_name varchar(50),
+city varchar(50),
+longitude float,
+latitude float, 
+timezone varchar(50)
+);
+
+create table dim.dim_tariff(
+aircraft_code varchar(20),
+seat_no varchar(10),
+fare_conditions varchar(20),
+primary key (aircraft_code, seat_no)
+);
+
+create table dim.dim_calendar(
+date timestamp
+);
+insert into dim.dim_calendar(date)
+select generate_series(to_date('01.01.2010','dd.mm.yyyy'),
+            to_date('31.12.2025','dd.mm.yyyy'),
+            '1 day');
+
+           
+ # создание таблицы фактов
+create table fact.fact_flights(
+id serial primary key,
+passenger_id varchar(200),
+actual_departure timestamptz,
+actual_arrival timestamptz,
+delay_departure_sec integer,
+delay_arrival_sec integer,
+aircraft_code varchar(50),
+departure_airport varchar(50),
+arrival_airport varchar(50),
+fare_conditions varchar(20),
+amount numeric(10,2),
+constraint passenger_id_fkey foreign key (passenger_id) references dim.dim_passengers(passenger_id),
+constraint aircraft_code_fkey foreign key (aircraft_code) references dim.dim_aircrafts(aircraft_code),
+constraint departure_airport_fkey foreign key (departure_airport) references dim.dim_airports(airport_code),
+constraint arrival_airport_fkey foreign key (arrival_airport) references dim.dim_airports(airport_code)
+);
+
+
+# создание rejected-таблиц
+create table rejected.flights(
+id serial primary key,
+passenger_id varchar(200),
+actual_departure timestamptz,
+actual_arrival timestamptz,
+delay_departure_sec integer,
+delay_arrival_sec integer,
+aircraft_code varchar(50),
+departure_airport varchar(50),
+arrival_airport varchar(50),
+fare_conditions varchar(20),
+amount numeric(10,2)
+);
+
+create table rejected.aircrafts(
+aircraft_code varchar(20) primary key,
+model varchar(50),
+range integer
+);
+
+create table rejected.airports(
+airport_code varchar(20) primary key,
+airport_name varchar(50),
+city varchar(50),
+longitude float,
+latitude float, 
+timezone varchar(50)
+);
+
+create table rejected.passengers(
+passenger_id varchar(20) primary key,
+passenger_name varchar(200),
+contact_data varchar(300)
+);
+
+create table rejected.tariff(
+aircraft_code varchar(20),
+seat_no varchar(10),
+fare_conditions varchar(20)
+);
